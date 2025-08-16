@@ -4,6 +4,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:time_management/data/controllers/auth_controller.dart';
+import 'package:time_management/data/models/user_model.dart';
 import 'package:time_management/data/service/network_caller.dart';
 import 'package:time_management/ui/widgets/centered_circular_progress_indicator.dart';
 import 'package:time_management/ui/widgets/screen_background.dart';
@@ -20,25 +21,17 @@ class UpdateProfileScreen extends StatefulWidget {
 }
 
 class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _firstNameController = TextEditingController();
-  final TextEditingController _lastNameController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController(text: AuthController.userModel?.email ?? "");
+  final TextEditingController _firstNameController = TextEditingController(text: AuthController.userModel?.firstName ?? "");
+  final TextEditingController _lastNameController = TextEditingController(text: AuthController.userModel?.lastName ?? "");
+  final TextEditingController _phoneController = TextEditingController(text: AuthController.userModel?.mobile ?? "");
   final TextEditingController _passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final ImagePicker _imagePicker = ImagePicker();
   XFile? _selectedImage;
   bool updateProfileInProgress = false;
 
-  @override
-  void initState() {
-    _emailController.text =  AuthController.userModel?.email ?? "";
-    _firstNameController.text =  AuthController.userModel?.firstName ?? "";
-    _lastNameController.text =  AuthController.userModel?.lastName ?? "";
-    _phoneController.text =  AuthController.userModel?.mobile ?? "";
-    _emailController.text =  AuthController.userModel?.email ?? "";
-    super.initState();
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -68,20 +61,23 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
                       decoration: BoxDecoration(
                         color: Colors.grey.shade300
                       ),
-                      child: Row(
-                        children: [
-                          Container(
-                            height: 50,
-                            width: 100,
-                            color: Colors.grey,
-                            alignment: Alignment.center,
-                            child: Text("Photo", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),),
-                          ),
-                          SizedBox(width: 15,),
-                          Text(_selectedImage == null ? "Select Image" : _selectedImage!.name,
-                          maxLines: 1,
-                          style: TextStyle(overflow: TextOverflow.ellipsis),),
-                        ],
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            Container(
+                              height: 50,
+                              width: 100,
+                              color: Colors.grey,
+                              alignment: Alignment.center,
+                              child: Text("Photo", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),),
+                            ),
+                            SizedBox(width: 15,),
+                            Text(_selectedImage == null ? "Select Image" : _selectedImage!.name,
+                            maxLines: 2,
+                            style: TextStyle(overflow: TextOverflow.ellipsis),),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -212,6 +208,9 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
     if(mounted){
       setState(() { });
     }
+
+    Uint8List? imageBytes;
+
     Map<String, String> resquestBody= {
       "email":_emailController.text,
       "firstName":_firstNameController.text.trim(),
@@ -222,7 +221,7 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
       resquestBody["password"] = _passwordController.text;
     }
     if(_selectedImage != null){
-      Uint8List imageBytes = await _selectedImage!.readAsBytes();
+       imageBytes = await _selectedImage!.readAsBytes();
       resquestBody["photo"] = base64Encode(imageBytes);
     }
     NetworkResponse response = await NetworkCaller.postRequest(url: Urls.updateProfileURL, body: resquestBody);
@@ -233,6 +232,17 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
     }
 
     if(response.isSuccess){
+      UserModel usesModel = UserModel(
+          id: AuthController.userModel!.id,
+          email: _emailController.text.trim(),
+          firstName: _firstNameController.text.trim(),
+          lastName: _lastNameController.text.trim(),
+          mobile: _phoneController.text.trim(),
+          photo: imageBytes == null
+              ? AuthController.userModel!.photo
+              : base64Encode(imageBytes),
+      );
+      await AuthController.updateUserData(usesModel);
       _passwordController.clear();
       if(mounted){
         showSnackBarMessage(context, "Profile Updated");

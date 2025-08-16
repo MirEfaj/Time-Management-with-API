@@ -1,15 +1,21 @@
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:time_management/data/service/network_caller.dart';
 import 'package:time_management/ui/screens/sign_in_screen.dart';
 import 'package:time_management/ui/screens/sign_up_screen.dart';
+import 'package:time_management/ui/widgets/centered_circular_progress_indicator.dart';
 import 'package:time_management/ui/widgets/screen_background.dart';
 
+import '../../data/utils.dart';
+import '../widgets/snack_bar_msg.dart';
 import 'forgot_password_email_screen.dart';
 
 class ChangePassScreen extends StatefulWidget {
-  const ChangePassScreen({super.key});
+  const ChangePassScreen({super.key, required this.email, required this.otp});
   static const String name = '/change-pass';
+  final String email;
+  final String otp;
 
   @override
   State<ChangePassScreen> createState() => _ChangePassScreenState();
@@ -19,6 +25,7 @@ class _ChangePassScreenState extends State<ChangePassScreen> {
   final TextEditingController _newPassController = TextEditingController();
   final TextEditingController _confirmPassController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool passChangeInProgress = false;
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +48,7 @@ class _ChangePassScreenState extends State<ChangePassScreen> {
                   const SizedBox(height: 25),
                   TextFormField(
                     controller: _newPassController,
-                    obscureText: true,
+                   // obscureText: true,
                     decoration: const InputDecoration(hintText: "New Password"),
                     validator: (String? value) {
                       if (value == null || value.isEmpty) {
@@ -55,19 +62,26 @@ class _ChangePassScreenState extends State<ChangePassScreen> {
                   const SizedBox(height: 10),
                   TextFormField(
                     controller: _confirmPassController,
-                    obscureText: true,
+                 //   obscureText: true,
                     decoration: const InputDecoration(hintText: "Confirm Password"),
                     validator: (String? value) {
-                      if (value != _newPassController) {
+                      if (value == null || value.isEmpty) {
+                        return "Enter confirm password";
+                      } else if (value != _newPassController.text) {
                         return "Confirm password doesn't match";
                       }
                       return null;
                     },
+
                   ),
                   const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _onTapChangePassButton,
-                    child: const Icon(Icons.arrow_circle_right_outlined),
+                  Visibility(
+                    visible: passChangeInProgress == false,
+                    replacement: CenteredCircularProgressIndicator(),
+                    child: ElevatedButton(
+                      onPressed: _onTapChangePassButton,
+                      child: const Icon(Icons.arrow_circle_right_outlined),
+                    ),
                   ),
                   const SizedBox(height: 25),
                   RichText(
@@ -107,12 +121,43 @@ class _ChangePassScreenState extends State<ChangePassScreen> {
 
   void _onTapChangePassButton() {
     if (_formKey.currentState!.validate()) {
-
+      _changePassword();
     }
 
   }
 
+Future<void> _changePassword() async {
+  passChangeInProgress = true;
+  setState(() { });
+  String email = widget.email;
+  String otp = widget.otp;
 
+  Map<String, String> requestBody= {
+    "email":email,
+    "OTP": otp,
+    "password":_confirmPassController.text
+  };
+  
+  NetworkResponse response = await NetworkCaller.postRequest(url: Urls.passChangeUrl, body: requestBody);
+  passChangeInProgress = true;
+  if(!mounted) return;
+  setState(() { });
+
+  if (response.isSuccess) {
+    showSnackBarMessage(context, "Password Successfully Changed");
+     // Navigator.pushNamed(context, SignInScreen.name);
+    Navigator.pushNamedAndRemoveUntil(
+      context,
+      SignInScreen.name,
+          (route) => false,
+    );
+
+  } else {
+    showSnackBarMessage(context, response.errorMessage ?? "Something went wrong");
+  }
+    
+ 
+}
 
   @override
   void dispose() {

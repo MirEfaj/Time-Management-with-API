@@ -3,8 +3,13 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:time_management/ui/screens/sign_in_screen.dart';
 import 'package:time_management/ui/screens/sign_up_screen.dart';
+import 'package:time_management/ui/widgets/centered_circular_progress_indicator.dart';
 import 'package:time_management/ui/widgets/screen_background.dart';
 
+import '../../data/models/user_model.dart';
+import '../../data/service/network_caller.dart';
+import '../../data/utils.dart';
+import '../widgets/snack_bar_msg.dart';
 import 'pin_verification_screen.dart';
 
 class ForgotPassScreen extends StatefulWidget {
@@ -18,6 +23,7 @@ class ForgotPassScreen extends StatefulWidget {
 class _ForgotPassScreenState extends State<ForgotPassScreen> {
   final TextEditingController _emailController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool forgetPassInProgress = false;
 
   @override
   Widget build(BuildContext context) {
@@ -35,12 +41,19 @@ class _ForgotPassScreenState extends State<ForgotPassScreen> {
                   const SizedBox(height: 80),
                   Text(
                     "Provide Your Email",
-                    style: Theme.of(context).textTheme.titleLarge,
+                    style: Theme
+                        .of(context)
+                        .textTheme
+                        .titleLarge,
                   ),
                   const SizedBox(height: 4),
                   Text(
                     "6 digit OTP will be send to your address",
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    style: Theme
+                        .of(context)
+                        .textTheme
+                        .bodySmall
+                        ?.copyWith(
                       color: Colors.grey,
                     ),
                   ),
@@ -60,9 +73,13 @@ class _ForgotPassScreenState extends State<ForgotPassScreen> {
                   ),
 
                   const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _onTapSubmitButton,
-                    child: const Icon(Icons.arrow_circle_right_outlined),
+                  Visibility(
+                    visible: forgetPassInProgress == false,
+                    replacement: CenteredCircularProgressIndicator(),
+                    child: ElevatedButton(
+                      onPressed: _onTapSubmitButton,
+                      child: const Icon(Icons.arrow_circle_right_outlined),
+                    ),
                   ),
                   const SizedBox(height: 25),
                   RichText(
@@ -98,18 +115,41 @@ class _ForgotPassScreenState extends State<ForgotPassScreen> {
 
   void _onTapSubmitButton() {
     if (_formKey.currentState!.validate()) {
-
+      _recoverEmail();
     }
-    Navigator.pushNamed(context, PinVerificationScreen.name);
+    //  Navigator.pushNamed(context, PinVerificationScreen.name);
   }
 
   void _onTapSignInButton() {
     Navigator.pushNamed(context, SignInScreen.name);
   }
 
-  @override
-  void dispose() {
-    _emailController.dispose();
-    super.dispose();
+
+    Future<void> _recoverEmail() async {
+      forgetPassInProgress = true;
+      setState(() {});
+
+      String email = _emailController.text.trim();
+
+      NetworkResponse response = await NetworkCaller.getRequest(
+        url: Urls.recoverVerifyEmailURL(email),);
+
+      forgetPassInProgress = false;
+      setState(() {});
+
+      if (response.isSuccess) {
+        showSnackBarMessage(context, response.body!['data']);
+        Navigator.push(context, MaterialPageRoute(builder: (context)=> PinVerificationScreen(email: email,)));
+      } else {
+        showSnackBarMessage(
+            context, response.errorMessage ?? "Something went wrong");
+      }
+    }
+
+
+    @override
+    void dispose() {
+      _emailController.dispose();
+      super.dispose();
+    }
   }
-}

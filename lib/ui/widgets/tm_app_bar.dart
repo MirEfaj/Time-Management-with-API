@@ -28,9 +28,9 @@ class _tmAppBarState extends State<tmAppBar> {
         leading: GestureDetector(
             onTap: _onTapProfileScreen,
             child: CircleAvatar(
-              // backgroundImage: AuthController.userModel?.photo == null
-              //     ? null
-              //     : MemoryImage(base64Decode(AuthController.userModel!.photo),),
+              backgroundImage: AuthController.userModel?.photo == null
+                  ? null
+                  : MemoryImage(base64Decode(AuthController.userModel!.photo.toString()),),
 
             )),
         title: Text(AuthController.userModel!.fullName,style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14),),

@@ -1,16 +1,21 @@
 class UserModel {
+  late String id;
+  late String email;
+  late String firstName;
+  late String lastName;
+  late String mobile;
+  String? photo; // <-- nullable
 
- late String id;
- late String email;
- late String firstName;
- late String lastName;
- late String mobile;
- late String photo;
+  String get fullName => "$firstName $lastName";
 
-String get fullName {
-  return firstName+" "+lastName;
-}
-
+  UserModel({
+    required this.id,
+    required this.email,
+    required this.firstName,
+    required this.lastName,
+    required this.mobile,
+    this.photo,  // <-- not required now
+  });
 
   UserModel.fromJson(Map<String, dynamic> jsonData) {
     id = jsonData['_id'];
@@ -18,18 +23,17 @@ String get fullName {
     firstName = jsonData['firstName'];
     lastName = jsonData['lastName'];
     mobile = jsonData['mobile'];
-    photo = jsonData['photo'];
+    photo = jsonData['photo']; // could be null
   }
 
   Map<String, dynamic> toJson() {
-    return{
-    '_id' : id,
-    'email' : email,
-    'firstName' : firstName,
-    'lastName' : lastName,
-    'mobile' : mobile,
-    'photo' : photo,
-
+    return {
+      '_id': id,
+      'email': email,
+      'firstName': firstName,
+      'lastName': lastName,
+      'mobile': mobile,
+      'photo': photo ?? "", // fallback if null
     };
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'ui/screens/add_new_task_screen.dart';
 import 'ui/screens/change_password_screen.dart';
 import 'ui/screens/forgot_password_email_screen.dart';
@@ -15,7 +16,7 @@ class TimeManagement extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
       navigatorKey: navigator,
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -54,8 +55,8 @@ class TimeManagement extends StatelessWidget {
         SignInScreen.name: (context) => SignInScreen(),
         SignUpScreen.name: (context) => SignUpScreen(),
         ForgotPassScreen.name: (context) => ForgotPassScreen(),
-        PinVerificationScreen.name: (context) => PinVerificationScreen(),
-        ChangePassScreen.name: (context) => ChangePassScreen(),
+      //  PinVerificationScreen.name: (context) => PinVerificationScreen(email: '',),
+      //  ChangePassScreen.name: (context) => ChangePassScreen(),
         MainNavBarHolderScreen.name: (context) => MainNavBarHolderScreen(),
         AddNewTaskScreen.name: (context) => AddNewTaskScreen(),
         UpdateProfileScreen.name: (context) => UpdateProfileScreen(),
