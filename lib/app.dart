@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'ui/screens/add_new_task_screen.dart';
 import 'ui/screens/change_password_screen.dart';
 import 'ui/screens/forgot_password_email_screen.dart';
@@ -16,7 +15,7 @@ class TimeManagement extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
+    return MaterialApp(
       navigatorKey: navigator,
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
